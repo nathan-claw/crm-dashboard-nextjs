@@ -261,7 +261,7 @@ export default function DashboardPage() {
               return (
                 <div key={index} className="flex items-center space-x-3">
                   <div className="shrink-0">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-white">
                         {initials}
                       </span>
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="mt-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
+                          className="bg-linear-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                         />
                       </div>
