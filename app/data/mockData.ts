@@ -25,6 +25,7 @@ export interface Deal {
   assignedTo: string;
 }
 
+
 export interface Activity {
   id: string;
   type: string;
@@ -120,6 +121,69 @@ export const mockTeamMembers: TeamMember[] = [
   }
 ];
 
+export const mockDeals: Deal[] = [
+  {
+    id: '1',
+    title: 'Q1 Software License Renewal',
+    value: 120000,
+    stage: 'closed-won',
+    probability: 100,
+    customerId: '1',
+    customerName: 'TechCorp Solutions',
+    expectedCloseDate: '2024-03-31',
+    createdAt: '2024-01-15T09:00:00Z',
+    assignedTo: 'Alex Thompson'
+  },
+  {
+    id: '2',
+    title: 'Digital Transformation Project',
+    value: 250000,
+    stage: 'negotiation',
+    probability: 80,
+    customerId: '2',
+    customerName: 'Innovate Inc',
+    expectedCloseDate: '2024-04-15',
+    createdAt: '2024-02-01T10:30:00Z',
+    assignedTo: 'Sarah Miller'
+  },
+  {
+    id: '3',
+    title: 'Enterprise Security Suite',
+    value: 180000,
+    stage: 'proposal',
+    probability: 65,
+    customerId: '3',
+    customerName: 'Global Tech',
+    expectedCloseDate: '2024-05-20',
+    createdAt: '2024-02-10T14:15:00Z',
+    assignedTo: 'Mike Johnson'
+  },
+  {
+    id: '4',
+    title: 'Startup Package Deal',
+    value: 50000,
+    stage: 'qualification',
+    probability: 50,
+    customerId: '4',
+    customerName: 'Startup Ventures',
+    expectedCloseDate: '2024-04-30',
+    createdAt: '2024-02-15T11:00:00Z',
+    assignedTo: 'Lisa Chen'
+  },
+  {
+    id: '5',
+    title: 'Cloud Migration Services',
+    value: 180000,
+    stage: 'closed-won',
+    probability: 100,
+    customerId: '5',
+    customerName: 'Enterprise Solutions',
+    expectedCloseDate: '2024-03-10',
+    createdAt: '2024-01-20T13:45:00Z',
+    assignedTo: 'Alex Thompson'
+  }
+];
+
 export const mockSalesMetrics: SalesMetric[] = [
   {
     label: 'Total Revenue',
@@ -160,38 +224,6 @@ export const mockRevenueData: ChartData[] = [
   { name: 'Jun', value: 1770000, deals: 30, customers: 73 }
 ];
 
-export const mockPipelineData: PipelineStage[] = [
-  {
-    stage: 'Prospecting',
-    count: 15,
-    value: 675000,
-    deals: []
-  },
-  {
-    stage: 'Qualification',
-    count: 8,
-    value: 850000,
-    deals: []
-  },
-  {
-    stage: 'Proposal',
-    count: 6,
-    value: 420000,
-    deals: []
-  },
-  {
-    stage: 'Negotiation',
-    count: 4,
-    value: 680000,
-    deals: []
-  },
-  {
-    stage: 'Closed Won',
-    count: 12,
-    value: 1770000,
-    deals: []
-  }
-];
 
 export const mockActivities: Activity[] = [
   {
