@@ -4,8 +4,6 @@ A Next.js-based CRM dashboard built with TypeScript, Tailwind CSS, and Drizzle O
 
 ## Project Philosophy
 
-This project follows a strict constitution defined in [`.specify/memory/constitution.md`](.specify/memory/constitution.md). Key principles include:
-
 - **Component Minimalism**: Create as few components as possible; maximize reusability
 - **No Testing Required**: Quality assurance through manual review and runtime validation
 - **Type Safety**: Strict TypeScript throughout the application
