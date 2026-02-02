@@ -164,3 +164,17 @@ export type ActivityType = 'call' | 'email' | 'meeting' | 'note' | 'task' | 'dea
 export type ActivityStatus = 'pending' | 'completed' | 'cancelled';
 export type CustomerSource = 'website' | 'referral' | 'cold-call' | 'email' | 'social-media';
 
+// Calendar Event Types
+export type EventCategory = 'meeting' | 'holiday' | 'conference' | 'birthday';
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD format
+  time: string; // HH:MM format
+  category: EventCategory;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
