@@ -4,81 +4,67 @@ import { useEffect, useState } from 'react';
 import MetricCard from '@/app/components/MetricCard';
 import { Users, DollarSign, TrendingUp, Target, Phone, Mail, Calendar, FileText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Customer, Deal, Activity } from '@/types';
+
+interface DashboardData {
+  metrics: {
+    totalCustomers: number;
+    activeCustomers: number;
+    totalDeals: number;
+    closedDeals: number;
+    lostDeals: number;
+    openDeals: number;
+    totalRevenue: number;
+    pipelineValue: number;
+    conversionRate: number;
+    avgDealSize: number;
+  };
+  pipelineData: Array<{
+    stage: string;
+    count: number;
+    value: number;
+  }>;
+  topPerformers: Array<{
+    name: string;
+    dealsCount: number;
+    revenue: number;
+    wonDeals: number;
+    totalDeals: number;
+    performance: number;
+    target: number;
+  }>;
+  recentActivities: Array<{
+    id: number;
+    type: string;
+    title: string;
+    description: string | null;
+    customerName: string | null;
+    assignedTo: string | null;
+    createdAt: string;
+  }>;
+}
 
 export default function DashboardPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch all data from API
-    Promise.all([
-      fetch('/api/customers').then(res => res.json()),
-      fetch('/api/deals').then(res => res.json()),
-      fetch('/api/activities').then(res => res.json()),
-    ]).then(([customersData, dealsData, activitiesData]) => {
-      setCustomers(customersData);
-      setDeals(dealsData);
-      setActivities(activitiesData);
-      setLoading(false);
-    }).catch(error => {
-      console.error('Error fetching data:', error);
-      setLoading(false);
-    });
+    fetch('/api/dashboard')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch dashboard data');
+        return res.json();
+      })
+      .then((dashboardData: DashboardData) => {
+        setData(dashboardData);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching dashboard:', err);
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  // Calculate metrics from real data
-  const totalCustomers = customers.length;
-  const activeCustomers = customers.filter(c => c.status === 'active').length;
-  const totalDeals = deals.length;
-  const closedDeals = deals.filter(d => d.stage === 'closed-won');
-  const totalRevenue = closedDeals.reduce((sum, d) => sum + d.value, 0);
-  const pipelineValue = deals.filter(d => d.stage !== 'closed-won' && d.stage !== 'closed-lost').reduce((sum, d) => sum + d.value, 0);
-  const conversionRate = totalDeals > 0 ? (closedDeals.length / totalDeals) * 100 : 0;
-  const avgDealSize = closedDeals.length > 0 ? totalRevenue / closedDeals.length : 0;
-
-  // Calculate top performers
-  const performerStats = deals.reduce((acc, deal) => {
-    const assignedTo = deal.assignedTo || 'Unassigned';
-    if (!acc[assignedTo]) {
-      acc[assignedTo] = {
-        name: assignedTo,
-        dealsCount: 0,
-        revenue: 0,
-        wonDeals: 0,
-        totalDeals: 0,
-      };
-    }
-    acc[assignedTo].totalDeals++;
-    if (deal.stage === 'closed-won') {
-      acc[assignedTo].wonDeals++;
-      acc[assignedTo].revenue += deal.value;
-      acc[assignedTo].dealsCount++;
-    }
-    return acc;
-  }, {} as Record<string, { name: string; dealsCount: number; revenue: number; wonDeals: number; totalDeals: number }>);
-
-  const topPerformers = Object.values(performerStats)
-    .map(performer => ({
-      ...performer,
-      performance: performer.totalDeals > 0 ? (performer.wonDeals / performer.totalDeals) * 100 : 0,
-      target: performer.revenue * 1.2, // Assume target is 120% of current revenue
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 4);
-
-  // Pipeline data by stage
-  const pipelineData = [
-    { stage: 'Prospecting', count: deals.filter(d => d.stage === 'prospecting').length, value: deals.filter(d => d.stage === 'prospecting').reduce((sum, d) => sum + d.value, 0) },
-    { stage: 'Qualification', count: deals.filter(d => d.stage === 'qualification').length, value: deals.filter(d => d.stage === 'qualification').reduce((sum, d) => sum + d.value, 0) },
-    { stage: 'Proposal', count: deals.filter(d => d.stage === 'proposal').length, value: deals.filter(d => d.stage === 'proposal').reduce((sum, d) => sum + d.value, 0) },
-    { stage: 'Negotiation', count: deals.filter(d => d.stage === 'negotiation').length, value: deals.filter(d => d.stage === 'negotiation').reduce((sum, d) => sum + d.value, 0) },
-    { stage: 'Closed Won', count: closedDeals.length, value: totalRevenue },
-  ];
-
-  // Helper functions
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -131,19 +117,31 @@ export default function DashboardPage() {
     );
   }
 
+  if (error || !data) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400">Error loading dashboard: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { metrics, pipelineData, topPerformers, recentActivities } = data;
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Sales Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">Welcome back! Here's what's happening with your sales today.</p>
+        <p className="text-gray-600 dark:text-gray-400">Welcome back! Here&apos;s what&apos;s happening with your sales today.</p>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Revenue"
-          value={formatCurrency(totalRevenue)}
+          value={formatCurrency(metrics.totalRevenue)}
           change={12.5}
           trend="up"
           period="vs last month"
@@ -151,7 +149,7 @@ export default function DashboardPage() {
         />
         <MetricCard
           title="Active Deals"
-          value={totalDeals.toString()}
+          value={metrics.totalDeals.toString()}
           change={8.3}
           trend="up"
           period="this month"
@@ -159,7 +157,7 @@ export default function DashboardPage() {
         />
         <MetricCard
           title="Conversion Rate"
-          value={`${conversionRate.toFixed(1)}%`}
+          value={`${metrics.conversionRate.toFixed(1)}%`}
           change={-2.1}
           trend="down"
           period="vs last month"
@@ -167,7 +165,7 @@ export default function DashboardPage() {
         />
         <MetricCard
           title="Avg Deal Size"
-          value={formatCurrency(avgDealSize)}
+          value={formatCurrency(metrics.avgDealSize)}
           change={15.7}
           trend="up"
           period="vs last quarter"
@@ -185,8 +183,8 @@ export default function DashboardPage() {
               <BarChart data={pipelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="stage" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Value']} />
+                <YAxis stroke="#6b7280" tickFormatter={(value) => `$${(Number(value) / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Value']} />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -204,7 +202,7 @@ export default function DashboardPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ stage, count }) => `${stage} (${count})`}
+                  label={({ name, value }: { name?: string; value?: number }) => `${name || ''} (${value || 0})`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -213,7 +211,7 @@ export default function DashboardPage() {
                     <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Value']} />
+                <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Value']} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -228,7 +226,7 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
           </div>
           <div className="space-y-4">
-            {activities.slice(0, 5).map((activity) => (
+            {recentActivities.map((activity) => (
               <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div className="shrink-0 mt-1">
                   {getActivityIcon(activity.type)}
@@ -296,8 +294,8 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Total Customers</p>
-              <p className="text-2xl font-bold">{totalCustomers}</p>
-              <p className="text-blue-100 text-sm">{activeCustomers} active</p>
+              <p className="text-2xl font-bold">{metrics.totalCustomers}</p>
+              <p className="text-blue-100 text-sm">{metrics.activeCustomers} active</p>
             </div>
             <Users className="w-8 h-8 text-blue-200" />
           </div>
@@ -307,8 +305,8 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-sm font-medium">Win Rate</p>
-              <p className="text-2xl font-bold">{conversionRate.toFixed(1)}%</p>
-              <p className="text-green-100 text-sm">{closedDeals.length} deals won</p>
+              <p className="text-2xl font-bold">{metrics.conversionRate.toFixed(1)}%</p>
+              <p className="text-green-100 text-sm">{metrics.closedDeals} deals won</p>
             </div>
             <TrendingUp className="w-8 h-8 text-green-200" />
           </div>
@@ -318,8 +316,8 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-purple-100 text-sm font-medium">Pipeline Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(pipelineValue)}</p>
-              <p className="text-purple-100 text-sm">Across {deals.filter(d => d.stage !== 'closed-won').length} deals</p>
+              <p className="text-2xl font-bold">{formatCurrency(metrics.pipelineValue)}</p>
+              <p className="text-purple-100 text-sm">Across {metrics.openDeals} deals</p>
             </div>
             <DollarSign className="w-8 h-8 text-purple-200" />
           </div>
@@ -328,4 +326,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
